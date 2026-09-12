@@ -1,0 +1,37 @@
+name: CI - Train and Save the model
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    train:
+        name: Train and Save the model
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                python-version: ["3.11", "3.12"]
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7.0.1
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v10.1.0
+              with:
+                  enable-cache: true
+                  python-version: ${{ matrix.python-version }}
+
+            - name: Install dependencies
+              run: uv sync
+
+            - name: Train model
+              run: |
+                  uv run train.py
+                  ls -la artifacts
+
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v7.0.1
+              with:
+                  name: ml-artifacts-${{ matrix.python-version }}-${{ github.run_id }}
+                  path: artifacts
